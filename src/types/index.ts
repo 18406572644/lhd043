@@ -1,3 +1,5 @@
+export type PlanetType = 'terrestrial' | 'gas_giant' | 'ice_giant' | 'moon' | 'exoplanet' | 'volcanic' | 'ocean';
+
 export interface Planet {
   id: string;
   name: string;
@@ -7,13 +9,18 @@ export interface Planet {
   travelDays: number;
   gravity: number;
   temperature: string;
+  minTemp: number;
+  maxTemp: number;
   atmosphere: string;
   difficulty: 'easy' | 'medium' | 'hard' | 'extreme';
   image: string;
   attractions: string[];
   baseCost: number;
   color: string;
+  type: PlanetType;
 }
+
+export type EquipmentImportance = 'essential' | 'recommended' | 'optional';
 
 export interface Equipment {
   id: string;
@@ -23,6 +30,7 @@ export interface Equipment {
   price: number;
   weight: number;
   required: boolean;
+  importance: EquipmentImportance;
   recommendedPlanets: string[];
   icon: string;
   specifications: { label: string; value: string }[];
@@ -30,7 +38,15 @@ export interface Equipment {
   precautions: string[];
   manufacturer: string;
   warranty: string;
+  minTemp: number;
+  maxTemp: number;
+  inStock: boolean;
+  isNew: boolean;
 }
+
+export type AttractionType = 'natural' | 'cultural' | 'extreme';
+export type AttractionCrowdLevel = 'low' | 'medium' | 'high';
+export type AttractionBestTime = 'morning' | 'afternoon' | 'evening' | 'night' | 'anytime';
 
 export interface Attraction {
   id: string;
@@ -39,8 +55,11 @@ export interface Attraction {
   description: string;
   highlights: string[];
   bestTime: string;
+  bestTimeSlot: AttractionBestTime;
   duration: number;
   image: string;
+  type: AttractionType;
+  crowdLevel: AttractionCrowdLevel;
 }
 
 export interface Supply {

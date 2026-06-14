@@ -9,6 +9,7 @@ export const equipmentData: Equipment[] = [
     price: 15000,
     weight: 120,
     required: true,
+    importance: 'essential',
     recommendedPlanets: ['moon', 'mars'],
     icon: 'HardHat',
     specifications: [
@@ -28,7 +29,11 @@ export const equipmentData: Equipment[] = [
       '需定期进行维护和校准'
     ],
     manufacturer: 'SpaceX 太空装备公司',
-    warranty: '2年整机保修，终身技术支持'
+    warranty: '2年整机保修，终身技术支持',
+    minTemp: -150,
+    maxTemp: 120,
+    inStock: true,
+    isNew: false
   },
   {
     id: 'advanced-spacesuit',
@@ -38,6 +43,7 @@ export const equipmentData: Equipment[] = [
     price: 45000,
     weight: 180,
     required: false,
+    importance: 'recommended',
     recommendedPlanets: ['mars', 'europa', 'titan', 'venus'],
     icon: 'Shield',
     specifications: [
@@ -57,7 +63,11 @@ export const equipmentData: Equipment[] = [
       '仅在训练合格后独立使用'
     ],
     manufacturer: '波音宇航系统',
-    warranty: '3年整机保修，每年免费校准'
+    warranty: '3年整机保修，每年免费校准',
+    minTemp: -200,
+    maxTemp: 200,
+    inStock: true,
+    isNew: true
   },
   {
     id: 'thermal-suit',
@@ -67,6 +77,7 @@ export const equipmentData: Equipment[] = [
     price: 80000,
     weight: 200,
     required: false,
+    importance: 'recommended',
     recommendedPlanets: ['venus', 'europa', 'titan'],
     icon: 'Thermometer',
     specifications: [
@@ -86,7 +97,11 @@ export const equipmentData: Equipment[] = [
       '避免直接接触500°C以上物体'
     ],
     manufacturer: '洛克希德·马丁极端环境装备部',
-    warranty: '5年保修，含3次免费大修'
+    warranty: '5年保修，含3次免费大修',
+    minTemp: -273,
+    maxTemp: 600,
+    inStock: false,
+    isNew: true
   },
   {
     id: 'oxygen-tank',
@@ -96,6 +111,7 @@ export const equipmentData: Equipment[] = [
     price: 8000,
     weight: 45,
     required: true,
+    importance: 'essential',
     recommendedPlanets: ['moon', 'mars', 'europa', 'titan', 'venus', 'kepler-442b'],
     icon: 'Wind',
     specifications: [
@@ -115,7 +131,11 @@ export const equipmentData: Equipment[] = [
       '每6个月需进行压力测试'
     ],
     manufacturer: '林德气体系统公司',
-    warranty: '1年保修，气瓶每5年强制检测'
+    warranty: '1年保修，气瓶每5年强制检测',
+    minTemp: -50,
+    maxTemp: 60,
+    inStock: true,
+    isNew: false
   },
   {
     id: 'jetpack',
@@ -125,6 +145,7 @@ export const equipmentData: Equipment[] = [
     price: 25000,
     weight: 60,
     required: false,
+    importance: 'optional',
     recommendedPlanets: ['moon', 'mars', 'europa', 'titan'],
     icon: 'Rocket',
     specifications: [
@@ -144,7 +165,11 @@ export const equipmentData: Equipment[] = [
       '故障时立即启动紧急降落程序'
     ],
     manufacturer: '贝尔飞行系统',
-    warranty: '2年保修，每年安全检查'
+    warranty: '2年保修，每年安全检查',
+    minTemp: -50,
+    maxTemp: 80,
+    inStock: true,
+    isNew: false
   },
   {
     id: 'terrain-scanner',
@@ -154,6 +179,7 @@ export const equipmentData: Equipment[] = [
     price: 12000,
     weight: 15,
     required: false,
+    importance: 'optional',
     recommendedPlanets: ['mars', 'europa', 'titan', 'kepler-442b'],
     icon: 'Radar',
     specifications: [
@@ -173,7 +199,11 @@ export const equipmentData: Equipment[] = [
       '数据需定期备份'
     ],
     manufacturer: '徕卡地理空间系统',
-    warranty: '3年保修，每年精度校准'
+    warranty: '3年保修，每年精度校准',
+    minTemp: -40,
+    maxTemp: 50,
+    inStock: true,
+    isNew: false
   },
   {
     id: 'med-kit',
@@ -183,6 +213,7 @@ export const equipmentData: Equipment[] = [
     price: 18000,
     weight: 25,
     required: true,
+    importance: 'essential',
     recommendedPlanets: ['moon', 'mars', 'europa', 'titan', 'venus', 'kepler-442b'],
     icon: 'Heart',
     specifications: [
@@ -202,7 +233,11 @@ export const equipmentData: Equipment[] = [
       '需接受基础医疗培训后使用'
     ],
     manufacturer: '强生航天医疗',
-    warranty: '2年保修，设备每年校准'
+    warranty: '2年保修，设备每年校准',
+    minTemp: -10,
+    maxTemp: 40,
+    inStock: true,
+    isNew: false
   },
   {
     id: 'radiation-detector',
@@ -212,6 +247,7 @@ export const equipmentData: Equipment[] = [
     price: 6000,
     weight: 3,
     required: true,
+    importance: 'essential',
     recommendedPlanets: ['mars', 'europa', 'titan', 'venus', 'kepler-442b'],
     icon: 'Activity',
     specifications: [
@@ -231,7 +267,11 @@ export const equipmentData: Equipment[] = [
       '累计剂量超阈值需进行医疗检查'
     ],
     manufacturer: 'Thermo Fisher Scientific',
-    warranty: '5年保修，每年免费校准'
+    warranty: '5年保修，每年免费校准',
+    minTemp: -30,
+    maxTemp: 60,
+    inStock: true,
+    isNew: false
   },
   {
     id: 'food-replicator',
@@ -241,6 +281,7 @@ export const equipmentData: Equipment[] = [
     price: 35000,
     weight: 80,
     required: false,
+    importance: 'optional',
     recommendedPlanets: ['mars', 'europa', 'titan', 'kepler-442b'],
     icon: 'UtensilsCrossed',
     specifications: [
@@ -260,7 +301,11 @@ export const equipmentData: Equipment[] = [
       '过敏体质者需仔细查看成分列表'
     ],
     manufacturer: 'Mozilla 太空厨房',
-    warranty: '2年保修，终身食谱更新'
+    warranty: '2年保修，终身食谱更新',
+    minTemp: -10,
+    maxTemp: 40,
+    inStock: true,
+    isNew: true
   },
   {
     id: 'hover-bike',
@@ -270,6 +315,7 @@ export const equipmentData: Equipment[] = [
     price: 120000,
     weight: 300,
     required: false,
+    importance: 'optional',
     recommendedPlanets: ['mars', 'titan', 'kepler-442b'],
     icon: 'Bike',
     specifications: [
@@ -289,7 +335,11 @@ export const equipmentData: Equipment[] = [
       '每年需进行全面安全检测'
     ],
     manufacturer: '杜卡迪宇航',
-    warranty: '3年保修，每年免费维护'
+    warranty: '3年保修，每年免费维护',
+    minTemp: -40,
+    maxTemp: 50,
+    inStock: false,
+    isNew: true
   },
   {
     id: 'communication-array',
@@ -299,6 +349,7 @@ export const equipmentData: Equipment[] = [
     price: 55000,
     weight: 40,
     required: false,
+    importance: 'recommended',
     recommendedPlanets: ['europa', 'titan', 'kepler-442b'],
     icon: 'Radio',
     specifications: [
@@ -318,7 +369,11 @@ export const equipmentData: Equipment[] = [
       '需定期校准天线阵列'
     ],
     manufacturer: 'SpaceX Starlink 深空部',
-    warranty: '5年保修，量子芯片终身保修'
+    warranty: '5年保修，量子芯片终身保修',
+    minTemp: -40,
+    maxTemp: 60,
+    inStock: true,
+    isNew: false
   },
   {
     id: 'zero-g-hammock',
@@ -328,6 +383,7 @@ export const equipmentData: Equipment[] = [
     price: 22000,
     weight: 35,
     required: false,
+    importance: 'optional',
     recommendedPlanets: ['moon', 'mars', 'europa', 'titan', 'venus', 'kepler-442b'],
     icon: 'Moon',
     specifications: [
@@ -347,6 +403,10 @@ export const equipmentData: Equipment[] = [
       '禁止在睡眠舱内进食'
     ],
     manufacturer: 'Casper 太空睡眠实验室',
-    warranty: '10年结构保修，3年电子部件保修'
+    warranty: '10年结构保修，3年电子部件保修',
+    minTemp: -10,
+    maxTemp: 40,
+    inStock: true,
+    isNew: false
   }
 ];

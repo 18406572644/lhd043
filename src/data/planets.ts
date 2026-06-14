@@ -10,12 +10,15 @@ export const planetsData: Planet[] = [
     travelDays: 7,
     gravity: 0.38,
     temperature: '-60°C 至 20°C',
+    minTemp: -87,
+    maxTemp: 20,
     atmosphere: '稀薄二氧化碳',
     difficulty: 'easy',
     image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=realistic%20mars%20planet%20red%20surface%20space%20background%20cinematic%20lighting%20high%20detail&image_size=square_hd',
     attractions: ['olympus-mons', 'valles-marineris', 'polar-caps'],
     baseCost: 50000,
-    color: '#e74c3c'
+    color: '#e74c3c',
+    type: 'terrestrial'
   },
   {
     id: 'moon',
@@ -26,12 +29,15 @@ export const planetsData: Planet[] = [
     travelDays: 3,
     gravity: 0.17,
     temperature: '-173°C 至 127°C',
+    minTemp: -173,
+    maxTemp: 127,
     atmosphere: '无',
     difficulty: 'easy',
     image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=realistic%20moon%20planet%20crater%20surface%20space%20background%20cinematic%20lighting%20high%20detail&image_size=square_hd',
     attractions: ['sea-of-tranquility', 'earth-rise', 'south-pole'],
     baseCost: 30000,
-    color: '#bdc3c7'
+    color: '#bdc3c7',
+    type: 'moon'
   },
   {
     id: 'europa',
@@ -42,12 +48,15 @@ export const planetsData: Planet[] = [
     travelDays: 21,
     gravity: 0.13,
     temperature: '-160°C',
+    minTemp: -220,
+    maxTemp: -140,
     atmosphere: '稀薄氧气',
     difficulty: 'medium',
     image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=realistic%20europa%20moon%20ice%20surface%20cracks%20jupiter%20background%20space%20cinematic%20lighting&image_size=square_hd',
     attractions: ['ice-caves', 'subsurface-ocean', 'jupiter-view'],
     baseCost: 150000,
-    color: '#3498db'
+    color: '#3498db',
+    type: 'ocean'
   },
   {
     id: 'titan',
@@ -58,12 +67,15 @@ export const planetsData: Planet[] = [
     travelDays: 30,
     gravity: 0.14,
     temperature: '-179°C',
+    minTemp: -190,
+    maxTemp: -170,
     atmosphere: '浓密氮气甲烷',
     difficulty: 'hard',
     image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=realistic%20titan%20moon%20orange%20atmosphere%20lakes%20saturn%20rings%20background%20space%20cinematic&image_size=square_hd',
     attractions: ['methane-lakes', 'dune-fields', 'saturn-rings-view'],
     baseCost: 250000,
-    color: '#f39c12'
+    color: '#f39c12',
+    type: 'ocean'
   },
   {
     id: 'venus',
@@ -74,12 +86,15 @@ export const planetsData: Planet[] = [
     travelDays: 5,
     gravity: 0.91,
     temperature: '462°C',
+    minTemp: 450,
+    maxTemp: 462,
     atmosphere: '浓密二氧化碳硫酸云',
     difficulty: 'extreme',
     image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=realistic%20venus%20planet%20yellow%20clouds%20atmosphere%20space%20background%20cinematic%20lighting%20high%20detail&image_size=square_hd',
     attractions: ['floating-cities', 'acid-clouds', 'maxwell-montes'],
     baseCost: 200000,
-    color: '#f1c40f'
+    color: '#f1c40f',
+    type: 'volcanic'
   },
   {
     id: 'kepler-442b',
@@ -90,11 +105,14 @@ export const planetsData: Planet[] = [
     travelDays: 90,
     gravity: 1.3,
     temperature: '-40°C 至 10°C',
+    minTemp: -60,
+    maxTemp: 10,
     atmosphere: '未知，可能宜居',
     difficulty: 'extreme',
     image: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=exoplanet%20kepler%20442b%20alien%20world%20two%20suns%20space%20background%20cinematic%20epic%20sci-fi&image_size=square_hd',
     attractions: ['alien-landscapes', 'binary-sunset', 'unknown-life'],
     baseCost: 1000000,
-    color: '#9b59b6'
+    color: '#9b59b6',
+    type: 'exoplanet'
   }
 ];
