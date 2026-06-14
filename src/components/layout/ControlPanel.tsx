@@ -1,6 +1,6 @@
 import { Box, Grid, Tabs, ScrollArea } from '@mantine/core';
 import { motion } from 'framer-motion';
-import { Globe, CalendarCheck, Package, Shield, Map, Ticket, Wallet } from 'lucide-react';
+import { Globe, CalendarCheck, Package, Shield, Map, Ticket, Wallet, BookOpen } from 'lucide-react';
 import { StatusBar } from './StatusBar';
 import { DashboardHeader } from './DashboardHeader';
 import { PlanetSelector } from '../planet/PlanetSelector';
@@ -10,6 +10,7 @@ import { EquipmentList } from '../equipment/EquipmentList';
 import { RouteMap } from '../route/RouteMap';
 import { AttractionList } from '../route/AttractionList';
 import { BudgetCalculator } from '../travel/BudgetCalculator';
+import { DiaryManager } from '../diary/DiaryManager';
 
 export const ControlPanel = () => {
   return (
@@ -85,6 +86,9 @@ export const ControlPanel = () => {
             </Tabs.Tab>
             <Tabs.Tab value="budget" leftSection={<Wallet size={20} />}>
               预算
+            </Tabs.Tab>
+            <Tabs.Tab value="diary" leftSection={<BookOpen size={20} />}>
+              日志
             </Tabs.Tab>
           </Tabs.List>
 
@@ -174,6 +178,19 @@ export const ControlPanel = () => {
                 style={{ padding: '20px' }}
               >
                 <BudgetCalculator />
+              </motion.div>
+            </ScrollArea>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="diary">
+            <ScrollArea h="100%" type="auto" scrollbarSize={8}>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+                style={{ padding: '20px' }}
+              >
+                <DiaryManager />
               </motion.div>
             </ScrollArea>
           </Tabs.Panel>

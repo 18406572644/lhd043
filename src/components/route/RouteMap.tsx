@@ -1,5 +1,5 @@
 import { Card, Text, Group, Box, Badge, ActionIcon, Tooltip, SegmentedControl } from '@mantine/core';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { MapPin, Navigation, Plane, ZoomIn, ZoomOut, Move, RotateCcw, Layers, Globe, Maximize2 } from 'lucide-react';
 import { useTravelStore } from '../../store/useTravelStore';
 import { NeonText } from '../effects/NeonText';
@@ -43,12 +43,317 @@ const PLANET_SCALE = {
   'kepler-442b': 8300
 };
 
+const ThreeScene = ({
+  destination,
+  attractions,
+  onAttractionClick
+}: {
+  destination: Planet;
+  attractions: Attraction[];
+  onAttractionClick: (attraction: Attraction) => void;
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const animationIdRef = useRef<number>();
+  const disposedRef = useRef(false);
+  const sceneDisposedRef = useRef(false);
+
+  useEffect(() => {
+    console.log('[ThreeScene] useEffect 执行');
+
+    disposedRef.current = false;
+    sceneDisposedRef.current = false;
+
+    const cleanup = () => {
+      if (animationIdRef.current) {
+        cancelAnimationFrame(animationIdRef.current);
+        animationIdRef.current = undefined;
+      }
+    };
+
+    cleanup();
+
+    let localCleanupFn: (() => void) | null = null;
+
+    const init = () => {
+      console.log('[ThreeScene] init 被调用，disposed:', disposedRef.current);
+
+      if (disposedRef.current) {
+        console.log('[ThreeScene] 已 disposed，跳过初始化');
+        return;
+      }
+
+      const container = containerRef.current;
+      if (!container) {
+        console.log('[ThreeScene] 容器为空，重试');
+        requestAnimationFrame(init);
+        return;
+      }
+
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+
+      if (width === 0 || height === 0) {
+        console.log('[ThreeScene] 容器尺寸为 0，重试', { width, height });
+        requestAnimationFrame(init);
+        return;
+      }
+
+      console.log('[ThreeScene] 初始化开始', { width, height, dest: destination.name });
+
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0a1628);
+
+      const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 10000);
+      camera.position.set(0, 30, 200);
+      camera.lookAt(0, 0, 0);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      container.appendChild(renderer.domElement);
+
+      const starGeometry = new THREE.BufferGeometry();
+      const starCount = 1000;
+      const starPositions = new Float32Array(starCount * 3);
+      for (let i = 0; i < starCount * 3; i += 3) {
+        starPositions[i] = (Math.random() - 0.5) * 1000;
+        starPositions[i + 1] = (Math.random() - 0.5) * 1000;
+        starPositions[i + 2] = (Math.random() - 0.5) * 1000;
+      }
+      starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+      const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.8, transparent: true, opacity: 0.9 });
+      scene.add(new THREE.Points(starGeometry, starMaterial));
+
+      const earth = new THREE.Mesh(
+        new THREE.SphereGeometry(15, 64, 64),
+        new THREE.MeshPhongMaterial({ color: 0x2ecc71, emissive: 0x1a5f3a, emissiveIntensity: 0.2, shininess: 100 })
+      );
+      earth.position.set(-80, 0, 0);
+      scene.add(earth);
+
+      const earthGlow = new THREE.Mesh(
+        new THREE.SphereGeometry(18, 64, 64),
+        new THREE.MeshPhongMaterial({ color: 0x00f5d4, transparent: true, opacity: 0.2, side: THREE.BackSide })
+      );
+      earthGlow.position.copy(earth.position);
+      scene.add(earthGlow);
+
+      const destColor = new THREE.Color(destination.color);
+      const destSize = Math.min(30, Math.max(10, (PLANET_SCALE[destination.id as keyof typeof PLANET_SCALE] || 3000) / 200));
+      const destPlanet = new THREE.Mesh(
+        new THREE.SphereGeometry(destSize, 64, 64),
+        new THREE.MeshPhongMaterial({ color: destColor, emissive: destColor, emissiveIntensity: 0.3, shininess: 100 })
+      );
+      destPlanet.position.set(80, 0, 0);
+      scene.add(destPlanet);
+
+      const destGlow = new THREE.Mesh(
+        new THREE.SphereGeometry(destSize + 5, 64, 64),
+        new THREE.MeshPhongMaterial({ color: destColor, transparent: true, opacity: 0.3, side: THREE.BackSide })
+      );
+      destGlow.position.copy(destPlanet.position);
+      scene.add(destGlow);
+
+      const curve = new THREE.QuadraticBezierCurve3(
+        new THREE.Vector3(-80, 0, 0),
+        new THREE.Vector3(0, 40, 0),
+        new THREE.Vector3(80, 0, 0)
+      );
+
+      const tube = new THREE.Mesh(
+        new THREE.TubeGeometry(curve, 100, 0.5, 8, false),
+        new THREE.MeshPhongMaterial({ color: destColor, transparent: true, opacity: 0.3, emissive: destColor, emissiveIntensity: 0.2 })
+      );
+      scene.add(tube);
+
+      const particleCount = 100;
+      const particleGeometry = new THREE.BufferGeometry();
+      const particlePositions = new Float32Array(particleCount * 3);
+      const particleColors = new Float32Array(particleCount * 3);
+      for (let i = 0; i < particleCount; i++) {
+        const t = Math.random();
+        const point = curve.getPoint(t);
+        particlePositions[i * 3] = point.x;
+        particlePositions[i * 3 + 1] = point.y;
+        particlePositions[i * 3 + 2] = point.z;
+        const color = new THREE.Color();
+        color.setHSL(0.5 + t * 0.3, 1, 0.6);
+        particleColors[i * 3] = color.r;
+        particleColors[i * 3 + 1] = color.g;
+        particleColors[i * 3 + 2] = color.b;
+      }
+      particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+      particleGeometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+      const particleSystem = new THREE.Points(
+        particleGeometry,
+        new THREE.PointsMaterial({ size: 2, vertexColors: true, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending })
+      );
+      scene.add(particleSystem);
+
+      const spacecraft = new THREE.Mesh(
+        new THREE.ConeGeometry(2, 5, 8),
+        new THREE.MeshPhongMaterial({ color: 0x00f5d4, emissive: 0x00f5d4, emissiveIntensity: 0.5 })
+      );
+      spacecraft.rotation.x = Math.PI / 2;
+      scene.add(spacecraft);
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+      const light1 = new THREE.PointLight(0x00f5d4, 2, 500);
+      light1.position.set(-80, 0, 0);
+      scene.add(light1);
+      const light2 = new THREE.PointLight(destColor, 2, 500);
+      light2.position.set(80, 0, 0);
+      scene.add(light2);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      dirLight.position.set(0, 50, 50);
+      scene.add(dirLight);
+
+      attractions.forEach((attraction, index) => {
+        const t = (index + 1) / (attractions.length + 1);
+        const point = curve.getPoint(t);
+        const mesh = new THREE.Mesh(
+          new THREE.SphereGeometry(2, 32, 32),
+          new THREE.MeshPhongMaterial({ color: 0xffbe0b, emissive: 0xffbe0b, emissiveIntensity: 0.8 })
+        );
+        mesh.position.copy(point);
+        mesh.userData = { attraction };
+        scene.add(mesh);
+
+        const glow = new THREE.Mesh(
+          new THREE.SphereGeometry(3, 32, 32),
+          new THREE.MeshPhongMaterial({ color: 0xffbe0b, transparent: true, opacity: 0.3 })
+        );
+        glow.position.copy(point);
+        scene.add(glow);
+      });
+
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+      const onClick = (event: MouseEvent) => {
+        const rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        for (const intersect of raycaster.intersectObjects(scene.children)) {
+          if (intersect.object.userData.attraction) {
+            onAttractionClick(intersect.object.userData.attraction);
+            break;
+          }
+        }
+      };
+      renderer.domElement.addEventListener('click', onClick);
+
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const { width: w, height: h } = entry.contentRect;
+          if (w > 0 && h > 0) {
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+          }
+        }
+      });
+      resizeObserver.observe(container);
+
+      let renderedFrames = 0;
+
+      const animate = () => {
+        if (sceneDisposedRef.current) return;
+        animationIdRef.current = requestAnimationFrame(animate);
+
+        earth.rotation.y += 0.002;
+        destPlanet.rotation.y += 0.003;
+
+        const time = Date.now() * 0.001;
+        const t = (Math.sin(time * 0.3) + 1) / 2;
+        const point = curve.getPoint(t);
+        spacecraft.position.copy(point);
+        const tangent = curve.getTangent(t);
+        spacecraft.lookAt(point.x + tangent.x, point.y + tangent.y, point.z + tangent.z);
+
+        const positions = particleSystem.geometry.attributes.position.array as Float32Array;
+        for (let i = 0; i < particleCount; i++) {
+          const pt = (time * 0.1 + i / particleCount) % 1;
+          const p = curve.getPoint(pt);
+          positions[i * 3] = p.x + (Math.random() - 0.5) * 2;
+          positions[i * 3 + 1] = p.y + (Math.random() - 0.5) * 2;
+          positions[i * 3 + 2] = p.z + (Math.random() - 0.5) * 2;
+        }
+        particleSystem.geometry.attributes.position.needsUpdate = true;
+
+        camera.position.x = Math.sin(time * 0.1) * 20;
+        camera.position.y = 50 + Math.sin(time * 0.15) * 10;
+        camera.lookAt(0, 0, 0);
+
+        renderer.render(scene, camera);
+
+        renderedFrames++;
+        if (renderedFrames === 5) {
+          console.log('[ThreeScene] 已成功渲染 5 帧');
+        }
+      };
+
+      animate();
+      console.log('[ThreeScene] 渲染循环已启动');
+
+      const cleanupScene = () => {
+        sceneDisposedRef.current = true;
+        console.log('[ThreeScene] 清理场景');
+        if (animationIdRef.current) cancelAnimationFrame(animationIdRef.current);
+        resizeObserver.disconnect();
+        renderer.domElement.removeEventListener('click', onClick);
+        renderer.dispose();
+        scene.traverse((obj) => {
+          if (obj instanceof THREE.Mesh) {
+            obj.geometry?.dispose();
+            if (Array.isArray(obj.material)) {
+              obj.material.forEach(m => m.dispose());
+            } else {
+              obj.material?.dispose();
+            }
+          }
+        });
+        if (container && renderer.domElement.parentNode === container) {
+          container.removeChild(renderer.domElement);
+        }
+      };
+
+      localCleanupFn = cleanupScene;
+    };
+
+    init();
+
+    return () => {
+      console.log('[ThreeScene] useEffect cleanup');
+      disposedRef.current = true;
+      if (localCleanupFn) localCleanupFn();
+    };
+  }, [destination, attractions, onAttractionClick]);
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        width: '100%',
+        height: '350px',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        border: '1px solid rgba(157, 78, 221, 0.3)',
+        background: 'linear-gradient(135deg, #0a1628, #060d1a)'
+      }}
+    />
+  );
+};
+
 export const RouteMap = () => {
   const { destination, attractions } = useTravelStore();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const threeContainerRef = useRef<HTMLDivElement>(null);
-  
+
   const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
   const [showScaleView, setShowScaleView] = useState(false);
   const [stars, setStars] = useState<Star[]>([]);
@@ -63,12 +368,6 @@ export const RouteMap = () => {
 
   const animationRef = useRef<number>();
   const progressRef = useRef(0);
-  const threeSceneRef = useRef<THREE.Scene | null>(null);
-  const threeCameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-  const threeRendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const threeAnimationRef = useRef<number>();
-  const spacecraftMeshRef = useRef<THREE.Mesh | null>(null);
-  const particlesSystemRef = useRef<THREE.Points | null>(null);
 
   useEffect(() => {
     const generateStars = () => {
@@ -89,10 +388,10 @@ export const RouteMap = () => {
 
   useEffect(() => {
     if (!destination) return;
-    
+
     const newParticles: Particle[] = [];
     const colors = ['#00f5d4', destination.color, '#ffbe0b', '#9d4edd'];
-    
+
     for (let i = 0; i < 30; i++) {
       newParticles.push({
         x: 0,
@@ -107,274 +406,10 @@ export const RouteMap = () => {
     setParticles(newParticles);
   }, [destination]);
 
-  const initThreeJS = useCallback(() => {
-    if (!threeContainerRef.current || !destination) return;
-
-    const width = threeContainerRef.current.clientWidth;
-    const height = threeContainerRef.current.clientHeight;
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a1628);
-    threeSceneRef.current = scene;
-
-    const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 10000);
-    camera.position.set(0, 50, 150);
-    camera.lookAt(0, 0, 0);
-    threeCameraRef.current = camera;
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    threeContainerRef.current.appendChild(renderer.domElement);
-    threeRendererRef.current = renderer;
-
-    const starGeometry = new THREE.BufferGeometry();
-    const starCount = 2000;
-    const starPositions = new Float32Array(starCount * 3);
-    
-    for (let i = 0; i < starCount * 3; i += 3) {
-      starPositions[i] = (Math.random() - 0.5) * 2000;
-      starPositions[i + 1] = (Math.random() - 0.5) * 2000;
-      starPositions[i + 2] = (Math.random() - 0.5) * 2000;
-    }
-    
-    starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    const starMaterial = new THREE.PointsMaterial({
-      color: 0xffffff,
-      size: 0.5,
-      transparent: true,
-      opacity: 0.8
-    });
-    const starField = new THREE.Points(starGeometry, starMaterial);
-    scene.add(starField);
-
-    const earthGeometry = new THREE.SphereGeometry(15, 64, 64);
-    const earthMaterial = new THREE.MeshPhongMaterial({
-      color: 0x2ecc71,
-      emissive: 0x1a5f3a,
-      emissiveIntensity: 0.2,
-      shininess: 100
-    });
-    const earth = new THREE.Mesh(earthGeometry, earthMaterial);
-    earth.position.set(-80, 0, 0);
-    scene.add(earth);
-
-    const earthGlowGeometry = new THREE.SphereGeometry(18, 64, 64);
-    const earthGlowMaterial = new THREE.MeshPhongMaterial({
-      color: 0x00f5d4,
-      transparent: true,
-      opacity: 0.2,
-      side: THREE.BackSide
-    });
-    const earthGlow = new THREE.Mesh(earthGlowGeometry, earthGlowMaterial);
-    earthGlow.position.copy(earth.position);
-    scene.add(earthGlow);
-
-    const destColor = new THREE.Color(destination.color);
-    const destSize = Math.min(30, Math.max(10, (PLANET_SCALE[destination.id as keyof typeof PLANET_SCALE] || 3000) / 200));
-    const destGeometry = new THREE.SphereGeometry(destSize, 64, 64);
-    const destMaterial = new THREE.MeshPhongMaterial({
-      color: destColor,
-      emissive: destColor,
-      emissiveIntensity: 0.3,
-      shininess: 100
-    });
-    const destPlanet = new THREE.Mesh(destGeometry, destMaterial);
-    destPlanet.position.set(80, 0, 0);
-    scene.add(destPlanet);
-
-    const destGlowGeometry = new THREE.SphereGeometry(destSize + 5, 64, 64);
-    const destGlowMaterial = new THREE.MeshPhongMaterial({
-      color: destColor,
-      transparent: true,
-      opacity: 0.3,
-      side: THREE.BackSide
-    });
-    const destGlow = new THREE.Mesh(destGlowGeometry, destGlowMaterial);
-    destGlow.position.copy(destPlanet.position);
-    scene.add(destGlow);
-
-    const curve = new THREE.QuadraticBezierCurve3(
-      new THREE.Vector3(-80, 0, 0),
-      new THREE.Vector3(0, 40, 0),
-      new THREE.Vector3(80, 0, 0)
-    );
-
-    const tubeGeometry = new THREE.TubeGeometry(curve, 100, 0.5, 8, false);
-    const tubeMaterial = new THREE.MeshPhongMaterial({
-      color: destColor,
-      transparent: true,
-      opacity: 0.3,
-      emissive: destColor,
-      emissiveIntensity: 0.2
-    });
-    const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
-    scene.add(tube);
-
-    const particleCount = 100;
-    const particleGeometry = new THREE.BufferGeometry();
-    const particlePositions = new Float32Array(particleCount * 3);
-    const particleColors = new Float32Array(particleCount * 3);
-    
-    for (let i = 0; i < particleCount; i++) {
-      const t = Math.random();
-      const point = curve.getPoint(t);
-      particlePositions[i * 3] = point.x;
-      particlePositions[i * 3 + 1] = point.y;
-      particlePositions[i * 3 + 2] = point.z;
-      
-      const color = new THREE.Color();
-      color.setHSL(0.5 + t * 0.3, 1, 0.6);
-      particleColors[i * 3] = color.r;
-      particleColors[i * 3 + 1] = color.g;
-      particleColors[i * 3 + 2] = color.b;
-    }
-    
-    particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-    particleGeometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
-    
-    const particleMaterial = new THREE.PointsMaterial({
-      size: 2,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.8,
-      blending: THREE.AdditiveBlending
-    });
-    
-    const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
-    scene.add(particleSystem);
-    particlesSystemRef.current = particleSystem;
-
-    const spacecraftGeometry = new THREE.ConeGeometry(2, 5, 8);
-    const spacecraftMaterial = new THREE.MeshPhongMaterial({
-      color: 0x00f5d4,
-      emissive: 0x00f5d4,
-      emissiveIntensity: 0.5
-    });
-    const spacecraft = new THREE.Mesh(spacecraftGeometry, spacecraftMaterial);
-    spacecraft.rotation.x = Math.PI / 2;
-    scene.add(spacecraft);
-    spacecraftMeshRef.current = spacecraft;
-
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
-    scene.add(ambientLight);
-
-    const pointLight1 = new THREE.PointLight(0x00f5d4, 1, 500);
-    pointLight1.position.set(-80, 0, 0);
-    scene.add(pointLight1);
-
-    const pointLight2 = new THREE.PointLight(destColor, 1, 500);
-    pointLight2.position.set(80, 0, 0);
-    scene.add(pointLight2);
-
-    attractions.forEach((attraction, index) => {
-      const t = (index + 1) / (attractions.length + 1);
-      const point = curve.getPoint(t);
-      
-      const attractionGeometry = new THREE.SphereGeometry(2, 32, 32);
-      const attractionMaterial = new THREE.MeshPhongMaterial({
-        color: 0xffbe0b,
-        emissive: 0xffbe0b,
-        emissiveIntensity: 0.8
-      });
-      const attractionMesh = new THREE.Mesh(attractionGeometry, attractionMaterial);
-      attractionMesh.position.copy(point);
-      attractionMesh.userData = { attraction };
-      scene.add(attractionMesh);
-
-      const attractionGlowGeometry = new THREE.SphereGeometry(3, 32, 32);
-      const attractionGlowMaterial = new THREE.MeshPhongMaterial({
-        color: 0xffbe0b,
-        transparent: true,
-        opacity: 0.3
-      });
-      const attractionGlow = new THREE.Mesh(attractionGlowGeometry, attractionGlowMaterial);
-      attractionGlow.position.copy(point);
-      scene.add(attractionGlow);
-    });
-
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-
-    const onMouseClick = (event: MouseEvent) => {
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(scene.children);
-
-      for (const intersect of intersects) {
-        if (intersect.object.userData.attraction) {
-          setSelectedAttraction(intersect.object.userData.attraction);
-          setModalOpened(true);
-          break;
-        }
-      }
-    };
-
-    renderer.domElement.addEventListener('click', onMouseClick);
-
-    const animate = () => {
-      threeAnimationRef.current = requestAnimationFrame(animate);
-
-      earth.rotation.y += 0.002;
-      destPlanet.rotation.y += 0.003;
-
-      const time = Date.now() * 0.001;
-      const t = (Math.sin(time * 0.3) + 1) / 2;
-      
-      if (spacecraftMeshRef.current) {
-        const point = curve.getPoint(t);
-        spacecraftMeshRef.current.position.copy(point);
-        
-        const tangent = curve.getTangent(t);
-        spacecraftMeshRef.current.lookAt(
-          point.x + tangent.x,
-          point.y + tangent.y,
-          point.z + tangent.z
-        );
-      }
-
-      if (particlesSystemRef.current) {
-        const positions = particlesSystemRef.current.geometry.attributes.position.array as Float32Array;
-        for (let i = 0; i < particleCount; i++) {
-          const t = (time * 0.1 + i / particleCount) % 1;
-          const point = curve.getPoint(t);
-          positions[i * 3] = point.x + (Math.random() - 0.5) * 2;
-          positions[i * 3 + 1] = point.y + (Math.random() - 0.5) * 2;
-          positions[i * 3 + 2] = point.z + (Math.random() - 0.5) * 2;
-        }
-        particlesSystemRef.current.geometry.attributes.position.needsUpdate = true;
-      }
-
-      camera.position.x = Math.sin(time * 0.1) * 20;
-      camera.position.y = 50 + Math.sin(time * 0.15) * 10;
-      camera.lookAt(0, 0, 0);
-
-      renderer.render(scene, camera);
-    };
-
-    animate();
-
-    return () => {
-      renderer.domElement.removeEventListener('click', onMouseClick);
-      if (threeAnimationRef.current) {
-        cancelAnimationFrame(threeAnimationRef.current);
-      }
-      renderer.dispose();
-      if (threeContainerRef.current && renderer.domElement.parentNode === threeContainerRef.current) {
-        threeContainerRef.current.removeChild(renderer.domElement);
-      }
-    };
-  }, [destination, attractions]);
-
-  useEffect(() => {
-    if (viewMode === '3d' && destination) {
-      const cleanup = initThreeJS();
-      return cleanup;
-    }
-  }, [viewMode, destination, initThreeJS]);
+  const handleAttractionClick = useCallback((attraction: Attraction) => {
+    setSelectedAttraction(attraction);
+    setModalOpened(true);
+  }, []);
 
   useEffect(() => {
     if (viewMode !== '2d' || !destination) return;
@@ -788,125 +823,115 @@ export const RouteMap = () => {
               </Group>
             </Group>
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={viewMode}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                {showScaleView ? (
-                  <ScaleView destination={destination} />
-                ) : viewMode === '2d' ? (
-                  <Box
-                    ref={containerRef}
-                    style={{
-                      position: 'relative',
-                      borderRadius: '12px',
-                      overflow: 'hidden',
-                      border: '1px solid rgba(157, 78, 221, 0.3)',
-                      background: 'linear-gradient(135deg, #0a1628, #060d1a)',
-                      cursor: isDragging ? 'grabbing' : 'grab'
-                    }}
-                    onWheel={handleWheel}
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseUp}
-                    onClick={handleCanvasClick}
-                  >
-                    <canvas
-                      ref={canvasRef}
-                      width={800}
-                      height={250}
-                      style={{ width: '100%', height: '250px', display: 'block' }}
-                    />
-                    
-                    <Box
-                      style={{
-                        position: 'absolute',
-                        bottom: '12px',
-                        left: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        pointerEvents: 'none'
-                      }}
-                    >
-                      <Box
-                        style={{
-                          width: '12px',
-                          height: '12px',
-                          borderRadius: '50%',
-                          background: '#00f5d4',
-                          boxShadow: '0 0 10px #00f5d4'
-                        }}
-                      />
-                      <Text size="xs" c="silverGray.3" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                        地球
-                      </Text>
-                    </Box>
+            <div style={{ position: 'relative' }}>
+              {showScaleView && (
+                <ScaleView destination={destination} />
+              )}
 
-                    <Box
-                      style={{
-                        position: 'absolute',
-                        bottom: '12px',
-                        right: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        pointerEvents: 'none'
-                      }}
-                    >
-                      <Text size="xs" c="silverGray.3" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                        {destination.name}
-                      </Text>
-                      <Box
-                        style={{
-                          width: '12px',
-                          height: '12px',
-                          borderRadius: '50%',
-                          background: destination.color,
-                          boxShadow: `0 0 10px ${destination.color}`
-                        }}
-                      />
-                    </Box>
-
-                    {viewState.scale !== 1 && (
-                      <Box
-                        style={{
-                          position: 'absolute',
-                          top: '12px',
-                          right: '12px',
-                          padding: '4px 10px',
-                          borderRadius: '6px',
-                          background: 'rgba(10, 22, 40, 0.8)',
-                          border: '1px solid rgba(0, 245, 212, 0.3)',
-                          pointerEvents: 'none'
-                        }}
-                      >
-                        <Text size="xs" c="neonCyan.5" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                          {Math.round(viewState.scale * 100)}%
-                        </Text>
-                      </Box>
-                    )}
-                  </Box>
-                ) : (
-                  <Box
-                    ref={threeContainerRef}
-                    style={{
-                      position: 'relative',
-                      borderRadius: '12px',
-                      overflow: 'hidden',
-                      border: '1px solid rgba(157, 78, 221, 0.3)',
-                      background: 'linear-gradient(135deg, #0a1628, #060d1a)',
-                      height: '350px'
-                    }}
+              {!showScaleView && viewMode === '2d' && (
+                <Box
+                  ref={containerRef}
+                  style={{
+                    position: 'relative',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    border: '1px solid rgba(157, 78, 221, 0.3)',
+                    background: 'linear-gradient(135deg, #0a1628, #060d1a)',
+                    cursor: isDragging ? 'grabbing' : 'grab'
+                  }}
+                  onWheel={handleWheel}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                  onClick={handleCanvasClick}
+                >
+                  <canvas
+                    ref={canvasRef}
+                    width={800}
+                    height={250}
+                    style={{ width: '100%', height: '250px', display: 'block' }}
                   />
-                )}
-              </motion.div>
-            </AnimatePresence>
+                  
+                  <Box
+                    style={{
+                      position: 'absolute',
+                      bottom: '12px',
+                      left: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      pointerEvents: 'none'
+                    }}
+                  >
+                    <Box
+                      style={{
+                        width: '12px',
+                        height: '12px',
+                        borderRadius: '50%',
+                        background: '#00f5d4',
+                        boxShadow: '0 0 10px #00f5d4'
+                      }}
+                    />
+                    <Text size="xs" c="silverGray.3" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                      地球
+                    </Text>
+                  </Box>
+
+                  <Box
+                    style={{
+                      position: 'absolute',
+                      bottom: '12px',
+                      right: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      pointerEvents: 'none'
+                    }}
+                  >
+                    <Text size="xs" c="silverGray.3" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                      {destination.name}
+                    </Text>
+                    <Box
+                      style={{
+                        width: '12px',
+                        height: '12px',
+                        borderRadius: '50%',
+                        background: destination.color,
+                        boxShadow: `0 0 10px ${destination.color}`
+                      }}
+                    />
+                  </Box>
+
+                  {viewState.scale !== 1 && (
+                    <Box
+                      style={{
+                        position: 'absolute',
+                        top: '12px',
+                        right: '12px',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        background: 'rgba(10, 22, 40, 0.8)',
+                        border: '1px solid rgba(0, 245, 212, 0.3)',
+                        pointerEvents: 'none'
+                      }}
+                    >
+                      <Text size="xs" c="neonCyan.5" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                        {Math.round(viewState.scale * 100)}%
+                      </Text>
+                    </Box>
+                  )}
+                </Box>
+              )}
+
+              {!showScaleView && viewMode === '3d' && (
+                <ThreeScene
+                  destination={destination}
+                  attractions={attractions}
+                  onAttractionClick={handleAttractionClick}
+                />
+              )}
+            </div>
 
             <Group mt="md" grow>
               <Card 

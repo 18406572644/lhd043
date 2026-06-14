@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { TravelState, Planet, BudgetDetail } from '../types';
+import type { TravelState, Planet, BudgetDetail, DiaryEntry, CheckInRecord } from '../types';
 import { mockApi } from '../data/mockApi';
 import { calculateSupplies, calculateBudget } from '../utils/calculations';
 
@@ -27,6 +27,42 @@ const loadFavoriteEquipment = (): string[] => {
   return [];
 };
 
+const loadDiaryEntries = (): DiaryEntry[] => {
+  try {
+    const stored = localStorage.getItem('diaryEntries');
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error('Failed to load diary entries:', e);
+  }
+  return [];
+};
+
+const loadCheckInRecords = (): CheckInRecord[] => {
+  try {
+    const stored = localStorage.getItem('checkInRecords');
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error('Failed to load check-in records:', e);
+  }
+  return [];
+};
+
+const loadNextCrewLogNumber = (): number => {
+  try {
+    const stored = localStorage.getItem('nextCrewLogNumber');
+    if (stored) {
+      return parseInt(stored, 10);
+    }
+  } catch (e) {
+    console.error('Failed to load crew log number:', e);
+  }
+  return 1;
+};
+
 export const useTravelStore = create<TravelState>((set, get) => ({
   destination: null,
   startDate: null,
@@ -41,6 +77,9 @@ export const useTravelStore = create<TravelState>((set, get) => ({
   equipmentSearchQuery: '',
   supplies: [],
   totalBudget: initialBudget,
+  diaryEntries: loadDiaryEntries(),
+  checkInRecords: loadCheckInRecords(),
+  nextCrewLogNumber: loadNextCrewLogNumber(),
 
   setDestination: (planet: Planet | null) => {
     set({ destination: planet });
@@ -164,5 +203,81 @@ export const useTravelStore = create<TravelState>((set, get) => ({
       attractions.length
     );
     set({ totalBudget: budget });
+  },
+
+  addDiaryEntry: (entry) => {
+    const { diaryEntries, nextCrewLogNumber } = get();
+    const newEntry: DiaryEntry = {
+      ...entry,
+      id: `diary-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: new Date().toISOString(),
+      crewLogNumber: nextCrewLogNumber
+    };
+    const updatedEntries = [newEntry, ...diaryEntries];
+    set({ diaryEntries: updatedEntries, nextCrewLogNumber: nextCrewLogNumber + 1 });
+    try {
+      localStorage.setItem('diaryEntries', JSON.stringify(updatedEntries));
+      localStorage.setItem('nextCrewLogNumber', String(nextCrewLogNumber + 1));
+    } catch (e) {
+      console.error('Failed to save diary entry:', e);
+    }
+  },
+
+  updateDiaryEntry: (id, updates) => {
+    const { diaryEntries } = get();
+    const updatedEntries = diaryEntries.map(entry =>
+      entry.id === id ? { ...entry, ...updates } : entry
+    );
+    set({ diaryEntries: updatedEntries });
+    try {
+      localStorage.setItem('diaryEntries', JSON.stringify(updatedEntries));
+    } catch (e) {
+      console.error('Failed to update diary entry:', e);
+    }
+  },
+
+  deleteDiaryEntry: (id) => {
+    const { diaryEntries, checkInRecords } = get();
+    const updatedEntries = diaryEntries.filter(entry => entry.id !== id);
+    const updatedCheckIns = checkInRecords.filter(record => record.diaryEntryId !== id);
+    set({ diaryEntries: updatedEntries, checkInRecords: updatedCheckIns });
+    try {
+      localStorage.setItem('diaryEntries', JSON.stringify(updatedEntries));
+      localStorage.setItem('checkInRecords', JSON.stringify(updatedCheckIns));
+    } catch (e) {
+      console.error('Failed to delete diary entry:', e);
+    }
+  },
+
+  addCheckIn: (record) => {
+    const { checkInRecords } = get();
+    const newRecord: CheckInRecord = {
+      ...record,
+      id: `checkin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      checkInTime: new Date().toISOString()
+    };
+    const updatedRecords = [newRecord, ...checkInRecords];
+    set({ checkInRecords: updatedRecords });
+    try {
+      localStorage.setItem('checkInRecords', JSON.stringify(updatedRecords));
+    } catch (e) {
+      console.error('Failed to save check-in record:', e);
+    }
+  },
+
+  removeCheckIn: (id) => {
+    const { checkInRecords } = get();
+    const updatedRecords = checkInRecords.filter(record => record.id !== id);
+    set({ checkInRecords: updatedRecords });
+    try {
+      localStorage.setItem('checkInRecords', JSON.stringify(updatedRecords));
+    } catch (e) {
+      console.error('Failed to remove check-in record:', e);
+    }
+  },
+
+  isAttractionCheckedIn: (attractionId) => {
+    const { checkInRecords } = get();
+    return checkInRecords.some(record => record.attractionId === attractionId);
   }
 }));

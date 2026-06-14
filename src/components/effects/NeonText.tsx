@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, CSSProperties } from 'react';
 import { motion } from 'framer-motion';
 
 interface NeonTextProps {
@@ -6,9 +6,10 @@ interface NeonTextProps {
   color?: string;
   size?: string;
   className?: string;
+  style?: CSSProperties;
 }
 
-export const NeonText = ({ children, color = '#9d4edd', size = 'inherit', className = '' }: NeonTextProps) => {
+export const NeonText = ({ children, color = '#9d4edd', size = 'inherit', className = '', style }: NeonTextProps) => {
   return (
     <motion.span
       className={className}
@@ -22,7 +23,8 @@ export const NeonText = ({ children, color = '#9d4edd', size = 'inherit', classN
           0 0 40px ${color}
         `,
         fontFamily: "'Orbitron', sans-serif",
-        letterSpacing: '1px'
+        letterSpacing: '1px',
+        ...style
       }}
       animate={{
         textShadow: [
