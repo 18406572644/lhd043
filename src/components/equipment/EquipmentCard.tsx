@@ -1,18 +1,21 @@
-import { Card, Text, Group, Box, Badge, Checkbox, Tooltip } from '@mantine/core';
+import { Card, Text, Group, Box, Badge, Checkbox, Tooltip, ActionIcon } from '@mantine/core';
 import { motion } from 'framer-motion';
 import * as Icons from 'lucide-react';
 import { Equipment } from '../../types';
 import { getCategoryLabel, formatCurrency } from '../../utils/calculations';
-import { Lock } from 'lucide-react';
+import { Lock, Star, Info } from 'lucide-react';
 
 interface EquipmentCardProps {
   equipment: Equipment;
   selected: boolean;
+  favorite: boolean;
   onToggle: () => void;
+  onFavoriteToggle: () => void;
+  onViewDetails: () => void;
 }
 
-export const EquipmentCard = ({ equipment, selected, onToggle }: EquipmentCardProps) => {
-  const IconComponent = (Icons as any)[equipment.icon] || Icons.Package;
+export const EquipmentCard = ({ equipment, selected, favorite, onToggle, onFavoriteToggle, onViewDetails }: EquipmentCardProps) => {
+  const IconComponent = (Icons as unknown as Record<string, React.ComponentType<{ size: number; color: string }>>)[equipment.icon] || Icons.Package;
   
   const categoryColors: Record<string, string> = {
     suit: '#9d4edd',
@@ -24,6 +27,14 @@ export const EquipmentCard = ({ equipment, selected, onToggle }: EquipmentCardPr
 
   const color = categoryColors[equipment.category] || '#c0c5ce';
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('input') || target.closest('button')) {
+      return;
+    }
+    onViewDetails();
+  };
+
   return (
     <motion.div
       whileHover={{ scale: 1.02, y: -3 }}
@@ -31,6 +42,8 @@ export const EquipmentCard = ({ equipment, selected, onToggle }: EquipmentCardPr
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
+      onClick={handleCardClick}
+      style={{ cursor: 'pointer' }}
     >
       <Card
         p="md"
@@ -104,23 +117,59 @@ export const EquipmentCard = ({ equipment, selected, onToggle }: EquipmentCardPr
             </Box>
           </Group>
 
-          <Tooltip label={equipment.required ? '必需装备，不可取消' : '点击选择'} position="top">
-            <Box style={{ pointerEvents: equipment.required ? 'none' : 'auto' }}>
-              <Checkbox
-                checked={selected}
-                onChange={onToggle}
-                size="lg"
-                color="neonPurple"
-                icon={equipment.required ? Lock : undefined}
-                styles={{
-                  input: {
-                    borderColor: equipment.required ? '#ff006e' : color,
-                    backgroundColor: equipment.required ? 'rgba(255, 0, 110, 0.2)' : undefined
-                  }
+          <Group gap="xs" wrap="nowrap" align="flex-start">
+            <Tooltip label={favorite ? '取消收藏' : '收藏装备'} position="top">
+              <ActionIcon
+                size="md"
+                variant="transparent"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFavoriteToggle();
                 }}
-              />
-            </Box>
-          </Tooltip>
+                style={{ color: favorite ? '#ffbe0b' : '#6c757d' }}
+              >
+                <motion.div
+                  animate={favorite ? { scale: [1, 1.3, 1] } : {}}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Star size={18} fill={favorite ? '#ffbe0b' : 'none'} />
+                </motion.div>
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="查看详情" position="top">
+              <ActionIcon
+                size="md"
+                variant="transparent"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewDetails();
+                }}
+                style={{ color: '#9d4edd' }}
+              >
+                <Info size={18} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={equipment.required ? '必需装备，不可取消' : '点击选择'} position="top">
+              <Box style={{ pointerEvents: equipment.required ? 'none' : 'auto' }}>
+                <Checkbox
+                  checked={selected}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    onToggle();
+                  }}
+                  size="lg"
+                  color="neonPurple"
+                  icon={equipment.required ? Lock : undefined}
+                  styles={{
+                    input: {
+                      borderColor: equipment.required ? '#ff006e' : color,
+                      backgroundColor: equipment.required ? 'rgba(255, 0, 110, 0.2)' : undefined
+                    }
+                  }}
+                />
+              </Box>
+            </Tooltip>
+          </Group>
         </Group>
 
         <Text size="xs" c="silverGray.4" mb="md" lineClamp={2}>
@@ -140,15 +189,26 @@ export const EquipmentCard = ({ equipment, selected, onToggle }: EquipmentCardPr
               {equipment.weight} kg
             </Text>
           </Box>
-          {equipment.required && (
-            <Badge 
-              color="neonPink" 
-              size="sm"
-              style={{ fontFamily: "'Orbitron', sans-serif" }}
-            >
-              必需
-            </Badge>
-          )}
+          <Group gap="xs" wrap="nowrap">
+            {favorite && (
+              <Badge 
+                color="energyYellow" 
+                size="sm"
+                style={{ fontFamily: "'Orbitron', sans-serif" }}
+              >
+                收藏
+              </Badge>
+            )}
+            {equipment.required && (
+              <Badge 
+                color="neonPink" 
+                size="sm"
+                style={{ fontFamily: "'Orbitron', sans-serif" }}
+              >
+                必需
+              </Badge>
+            )}
+          </Group>
         </Group>
       </Card>
     </motion.div>

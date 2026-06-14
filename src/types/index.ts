@@ -25,6 +25,11 @@ export interface Equipment {
   required: boolean;
   recommendedPlanets: string[];
   icon: string;
+  specifications: { label: string; value: string }[];
+  usageInstructions: string;
+  precautions: string[];
+  manufacturer: string;
+  warranty: string;
 }
 
 export interface Attraction {
@@ -74,6 +79,8 @@ export interface TravelState {
   attractions: Attraction[];
   loading: { planets: boolean; equipment: boolean; attractions: boolean };
   selectedEquipment: string[];
+  favoriteEquipment: string[];
+  equipmentSearchQuery: string;
   supplies: SupplyItem[];
   totalBudget: BudgetDetail;
   setDestination: (planet: Planet | null) => void;
@@ -81,6 +88,8 @@ export interface TravelState {
   setTravelers: (count: number) => void;
   setStartDate: (date: Date | null) => void;
   toggleEquipment: (id: string) => void;
+  toggleFavoriteEquipment: (id: string) => void;
+  setEquipmentSearchQuery: (query: string) => void;
   loadPlanets: () => Promise<void>;
   loadEquipment: (planetId?: string) => Promise<void>;
   loadAttractions: (planetId: string) => Promise<void>;

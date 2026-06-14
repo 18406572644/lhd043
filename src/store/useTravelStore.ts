@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { TravelState, Planet, Equipment, Attraction, SupplyItem, BudgetDetail } from '../types';
+import type { TravelState, Planet, BudgetDetail } from '../types';
 import { mockApi } from '../data/mockApi';
 import { calculateSupplies, calculateBudget } from '../utils/calculations';
 
@@ -15,6 +15,18 @@ const initialBudget: BudgetDetail = {
   total: 0
 };
 
+const loadFavoriteEquipment = (): string[] => {
+  try {
+    const stored = localStorage.getItem('favoriteEquipment');
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error('Failed to load favorites:', e);
+  }
+  return [];
+};
+
 export const useTravelStore = create<TravelState>((set, get) => ({
   destination: null,
   startDate: null,
@@ -25,6 +37,8 @@ export const useTravelStore = create<TravelState>((set, get) => ({
   attractions: [],
   loading: { planets: false, equipment: false, attractions: false },
   selectedEquipment: [],
+  favoriteEquipment: loadFavoriteEquipment(),
+  equipmentSearchQuery: '',
   supplies: [],
   totalBudget: initialBudget,
 
@@ -71,6 +85,26 @@ export const useTravelStore = create<TravelState>((set, get) => ({
     get().calculateBudget();
   },
 
+  toggleFavoriteEquipment: (id: string) => {
+    const { favoriteEquipment } = get();
+    let newFavorites: string[];
+    if (favoriteEquipment.includes(id)) {
+      newFavorites = favoriteEquipment.filter(fid => fid !== id);
+    } else {
+      newFavorites = [...favoriteEquipment, id];
+    }
+    set({ favoriteEquipment: newFavorites });
+    try {
+      localStorage.setItem('favoriteEquipment', JSON.stringify(newFavorites));
+    } catch (e) {
+      console.error('Failed to save favorites:', e);
+    }
+  },
+
+  setEquipmentSearchQuery: (query: string) => {
+    set({ equipmentSearchQuery: query });
+  },
+
   loadPlanets: async () => {
     set({ loading: { ...get().loading, planets: true } });
     try {
@@ -85,10 +119,16 @@ export const useTravelStore = create<TravelState>((set, get) => ({
     set({ loading: { ...get().loading, equipment: true } });
     try {
       const equipment = await mockApi.getEquipment(planetId);
+      const { favoriteEquipment } = get();
+      
       const requiredIds = equipment.filter(e => e.required).map(e => e.id);
+      const favoriteIdsForPlanet = equipment
+        .filter(e => favoriteEquipment.includes(e.id) && !e.required)
+        .map(e => e.id);
+      
       set({ 
         equipment, 
-        selectedEquipment: requiredIds 
+        selectedEquipment: [...requiredIds, ...favoriteIdsForPlanet] 
       });
       get().calculateBudget();
     } finally {

@@ -10,7 +10,25 @@ export const equipmentData: Equipment[] = [
     weight: 120,
     required: true,
     recommendedPlanets: ['moon', 'mars'],
-    icon: 'HardHat'
+    icon: 'HardHat',
+    specifications: [
+      { label: '材质', value: '多层复合纤维+氧化铝陶瓷' },
+      { label: '工作温度', value: '-150°C 至 120°C' },
+      { label: '氧气续航', value: '8小时' },
+      { label: '最大承受压力', value: '400 kPa' },
+      { label: '通讯系统', value: 'UHF/VHF 双频段' },
+      { label: '生命支持系统', value: '闭式循环' }
+    ],
+    usageInstructions: '1. 穿著前检查所有密封件是否完好\n2. 启动氧气系统并等待3分钟预热\n3. 连接通讯线缆并测试通话质量\n4. 进行压力测试确保无泄漏\n5. 在专业人员指导下完成穿著',
+    precautions: [
+      '禁止在未完成安全检查的情况下使用',
+      '避免与尖锐物体直接接触',
+      '氧气储量低于20%时必须返回舱内',
+      '发现任何损坏立即停止使用并报告',
+      '需定期进行维护和校准'
+    ],
+    manufacturer: 'SpaceX 太空装备公司',
+    warranty: '2年整机保修，终身技术支持'
   },
   {
     id: 'advanced-spacesuit',
@@ -21,7 +39,25 @@ export const equipmentData: Equipment[] = [
     weight: 180,
     required: false,
     recommendedPlanets: ['mars', 'europa', 'titan', 'venus'],
-    icon: 'Shield'
+    icon: 'Shield',
+    specifications: [
+      { label: '材质', value: '纳米碳管复合+铅硼辐射屏蔽层' },
+      { label: '工作温度', value: '-200°C 至 200°C' },
+      { label: '氧气续航', value: '16小时' },
+      { label: '辐射屏蔽率', value: '99.5%' },
+      { label: '最大工作深度', value: '100米（液体环境）' },
+      { label: 'AI辅助系统', value: '集成健康监测AI' }
+    ],
+    usageInstructions: '1. 启动AI健康监测系统\n2. 根据环境自动调节温度和压力\n3. 激活辐射探测器实时监测\n4. 确保备用氧气罐已连接\n5. 校准头盔显示系统',
+    precautions: [
+      '辐射警报响起时立即寻找掩体',
+      'AI系统异常时切换至手动模式',
+      '避免长时间暴露在极端温度下',
+      '每使用50小时需进行全面检修',
+      '仅在训练合格后独立使用'
+    ],
+    manufacturer: '波音宇航系统',
+    warranty: '3年整机保修，每年免费校准'
   },
   {
     id: 'thermal-suit',
@@ -32,7 +68,25 @@ export const equipmentData: Equipment[] = [
     weight: 200,
     required: false,
     recommendedPlanets: ['venus', 'europa', 'titan'],
-    icon: 'Thermometer'
+    icon: 'Thermometer',
+    specifications: [
+      { label: '材质', value: '气凝胶隔热层+相变温度调节层' },
+      { label: '工作温度', value: '-273°C 至 600°C' },
+      { label: '氧气续航', value: '24小时' },
+      { label: '冷却系统', value: '主动液冷循环' },
+      { label: '加热系统', value: '同位素热电发生器' },
+      { label: '压力调节', value: '自动适应0.1-10atm' }
+    ],
+    usageInstructions: '1. 提前1小时启动温控系统进行预调\n2. 根据目标环境设置工作模式\n3. 检查冷却剂和燃料液位\n4. 确认应急冷却系统可用\n5. 穿戴后等待15分钟使系统稳定',
+    precautions: [
+      '温控系统故障时立即撤离危险区域',
+      '禁止在500°C以上环境长时间停留',
+      '冷却剂泄漏时立即关闭相关阀门',
+      '需每使用10小时补充冷却剂',
+      '避免直接接触500°C以上物体'
+    ],
+    manufacturer: '洛克希德·马丁极端环境装备部',
+    warranty: '5年保修，含3次免费大修'
   },
   {
     id: 'oxygen-tank',
@@ -43,7 +97,25 @@ export const equipmentData: Equipment[] = [
     weight: 45,
     required: true,
     recommendedPlanets: ['moon', 'mars', 'europa', 'titan', 'venus', 'kepler-442b'],
-    icon: 'Wind'
+    icon: 'Wind',
+    specifications: [
+      { label: '氧气容量', value: '1200L（压缩至200bar）' },
+      { label: '持续时间', value: '72小时（正常呼吸）' },
+      { label: '备用罐容量', value: '200L（应急使用）' },
+      { label: '重量', value: '45kg（含氧气）' },
+      { label: '输出压力', value: '可调节0.5-2bar' },
+      { label: '循环效率', value: 'CO2吸收率99.9%' }
+    ],
+    usageInstructions: '1. 使用前检查压力表确保压力充足\n2. 打开主阀门并检查输出压力\n3. 连接呼吸面罩并测试气密性\n4. 低气压警报时切换至备用罐\n5. 使用后及时填充并检测',
+    precautions: [
+      '压力表低于50bar时禁止使用',
+      '备用罐仅在紧急情况下使用',
+      '远离高温和明火区域',
+      '禁止撞击或剧烈震动',
+      '每6个月需进行压力测试'
+    ],
+    manufacturer: '林德气体系统公司',
+    warranty: '1年保修，气瓶每5年强制检测'
   },
   {
     id: 'jetpack',
@@ -54,7 +126,25 @@ export const equipmentData: Equipment[] = [
     weight: 60,
     required: false,
     recommendedPlanets: ['moon', 'mars', 'europa', 'titan'],
-    icon: 'Rocket'
+    icon: 'Rocket',
+    specifications: [
+      { label: '最大推力', value: '1500N' },
+      { label: '最大飞行速度', value: '120km/h' },
+      { label: '续航时间', value: '30分钟（持续推力）' },
+      { label: '燃料类型', value: '过氧化氢+煤油' },
+      { label: '最大载荷', value: '150kg' },
+      { label: '安全系统', value: '自动稳定+紧急降落伞' }
+    ],
+    usageInstructions: '1. 检查燃料和推进剂液位\n2. 穿戴并固定所有安全绑带\n3. 启动系统并等待预热完成\n4. 在开阔区域进行测试飞行\n5. 保持与障碍物的安全距离',
+    precautions: [
+      '禁止在大气层内无防护使用',
+      '燃料不足30%时禁止起飞',
+      '最大速度下避免急转',
+      '需完成20小时模拟训练后使用',
+      '故障时立即启动紧急降落程序'
+    ],
+    manufacturer: '贝尔飞行系统',
+    warranty: '2年保修，每年安全检查'
   },
   {
     id: 'terrain-scanner',
@@ -65,7 +155,25 @@ export const equipmentData: Equipment[] = [
     weight: 15,
     required: false,
     recommendedPlanets: ['mars', 'europa', 'titan', 'kepler-442b'],
-    icon: 'Radar'
+    icon: 'Radar',
+    specifications: [
+      { label: '扫描范围', value: '5km 半径' },
+      { label: '精度', value: '±5cm（近距离）' },
+      { label: '地下探测深度', value: '500m' },
+      { label: '激光波长', value: '1550nm（人眼安全）' },
+      { label: '扫描速度', value: '100万点/秒' },
+      { label: '电池续航', value: '12小时' }
+    ],
+    usageInstructions: '1. 放置在稳固平坦的地面上\n2. 启动设备并进行初始校准\n3. 设置扫描范围和精度参数\n4. 开始扫描并等待完成\n5. 数据分析可实时或离线进行',
+    precautions: [
+      '避免直视激光发射口',
+      '在强磁场环境下可能影响精度',
+      '定期清洁镜头避免灰尘影响',
+      '低温环境下需预热设备',
+      '数据需定期备份'
+    ],
+    manufacturer: '徕卡地理空间系统',
+    warranty: '3年保修，每年精度校准'
   },
   {
     id: 'med-kit',
@@ -76,7 +184,25 @@ export const equipmentData: Equipment[] = [
     weight: 25,
     required: true,
     recommendedPlanets: ['moon', 'mars', 'europa', 'titan', 'venus', 'kepler-442b'],
-    icon: 'Heart'
+    icon: 'Heart',
+    specifications: [
+      { label: '包含药物', value: '50种常用急救药物' },
+      { label: '生命支持系统', value: '便携式心肺复苏设备' },
+      { label: '诊断设备', value: '便携超声+血液分析仪' },
+      { label: '骨再生设备', value: '低强度脉冲超声治疗仪' },
+      { label: '抗辐射药物', value: '30天剂量' },
+      { label: 'AI医疗助手', value: '实时诊断建议' }
+    ],
+    usageInstructions: '1. 定期检查药物有效期\n2. 确保所有设备电量充足\n3. 熟悉各设备的使用方法\n4. 紧急情况下按AI指导操作\n5. 使用后及时补充消耗品',
+    precautions: [
+      '药物过期需立即更换',
+      '医疗设备需定期校准',
+      '辐射药物需冷藏保存',
+      '仅在紧急情况下使用强效药物',
+      '需接受基础医疗培训后使用'
+    ],
+    manufacturer: '强生航天医疗',
+    warranty: '2年保修，设备每年校准'
   },
   {
     id: 'radiation-detector',
@@ -87,7 +213,25 @@ export const equipmentData: Equipment[] = [
     weight: 3,
     required: true,
     recommendedPlanets: ['mars', 'europa', 'titan', 'venus', 'kepler-442b'],
-    icon: 'Activity'
+    icon: 'Activity',
+    specifications: [
+      { label: '探测类型', value: 'α, β, γ, 中子辐射' },
+      { label: '测量范围', value: '0.01μSv/h - 10Sv/h' },
+      { label: '精度', value: '±10%（标准量程）' },
+      { label: '警报阈值', value: '可自定义设置' },
+      { label: '数据记录', value: '可存储1年数据' },
+      { label: '电池续航', value: '30天' }
+    ],
+    usageInstructions: '1. 开机后等待自检完成\n2. 设置个人剂量警报阈值\n3. 随身携带或固定在关键位置\n4. 定期查看累计剂量\n5. 数据可导出至健康监测系统',
+    precautions: [
+      '警报响起时立即采取防护措施',
+      '避免将探测器直接对准强辐射源',
+      '需定期进行剂量校准',
+      '防水但不可浸泡',
+      '累计剂量超阈值需进行医疗检查'
+    ],
+    manufacturer: 'Thermo Fisher Scientific',
+    warranty: '5年保修，每年免费校准'
   },
   {
     id: 'food-replicator',
@@ -98,7 +242,25 @@ export const equipmentData: Equipment[] = [
     weight: 80,
     required: false,
     recommendedPlanets: ['mars', 'europa', 'titan', 'kepler-442b'],
-    icon: 'UtensilsCrossed'
+    icon: 'UtensilsCrossed',
+    specifications: [
+      { label: '可合成食谱', value: '5000+种菜品' },
+      { label: '原料容量', value: '50kg基础原料' },
+      { label: '合成速度', value: '3-5分钟/餐' },
+      { label: '营养定制', value: '支持个性化营养配比' },
+      { label: '口味学习', value: 'AI学习用户偏好' },
+      { label: '清洁系统', value: '自动清洁消毒' }
+    ],
+    usageInstructions: '1. 确保原料仓有足够的基础原料\n2. 在界面选择或搜索想要的菜品\n3. 根据需求调整营养参数\n4. 等待合成完成后即可食用\n5. 定期补充原料和清洁液',
+    precautions: [
+      '禁止放入非标准原料',
+      '原料不足时系统会自动提醒',
+      '清洁时需关闭电源',
+      '需定期进行深度清洁',
+      '过敏体质者需仔细查看成分列表'
+    ],
+    manufacturer: 'Mozilla 太空厨房',
+    warranty: '2年保修，终身食谱更新'
   },
   {
     id: 'hover-bike',
@@ -109,7 +271,25 @@ export const equipmentData: Equipment[] = [
     weight: 300,
     required: false,
     recommendedPlanets: ['mars', 'titan', 'kepler-442b'],
-    icon: 'Bike'
+    icon: 'Bike',
+    specifications: [
+      { label: '最大速度', value: '300km/h' },
+      { label: '最大高度', value: '100m' },
+      { label: '续航里程', value: '500km' },
+      { label: '最大载荷', value: '200kg' },
+      { label: '推进系统', value: '反重力引擎+离子推进' },
+      { label: '安全系统', value: 'AI防撞+自动稳定' }
+    ],
+    usageInstructions: '1. 检查电量和系统状态\n2. 佩戴安全头盔和防护装备\n3. 启动引擎并等待系统自检\n4. 缓慢推动控制杆开始移动\n5. 高速行驶时保持安全距离',
+    precautions: [
+      '最大载重下速度会降低',
+      '风暴天气禁止行驶',
+      '需完成50小时训练后驾驶',
+      '电量低于20%时需立即返回',
+      '每年需进行全面安全检测'
+    ],
+    manufacturer: '杜卡迪宇航',
+    warranty: '3年保修，每年免费维护'
   },
   {
     id: 'communication-array',
@@ -120,7 +300,25 @@ export const equipmentData: Equipment[] = [
     weight: 40,
     required: false,
     recommendedPlanets: ['europa', 'titan', 'kepler-442b'],
-    icon: 'Radio'
+    icon: 'Radio',
+    specifications: [
+      { label: '通讯方式', value: '量子纠缠通讯' },
+      { label: '延迟', value: '0ms（即时通讯）' },
+      { label: '通讯距离', value: '无限（理论值）' },
+      { label: '加密方式', value: '量子密钥分发' },
+      { label: '带宽', value: '100Gbps' },
+      { label: '连接数量', value: '最多支持1000个设备' }
+    ],
+    usageInstructions: '1. 展开天线阵列并对准地球方向\n2. 启动量子纠缠配对程序\n3. 等待连接建立（约30秒）\n4. 可通过语音、视频或数据传输\n5. 使用后收回天线保护设备',
+    precautions: [
+      '避免天线阵列受到物理损伤',
+      '量子配对仅需执行一次',
+      '加密密钥需妥善保管',
+      '极端天气可能影响信号质量',
+      '需定期校准天线阵列'
+    ],
+    manufacturer: 'SpaceX Starlink 深空部',
+    warranty: '5年保修，量子芯片终身保修'
   },
   {
     id: 'zero-g-hammock',
@@ -131,6 +329,24 @@ export const equipmentData: Equipment[] = [
     weight: 35,
     required: false,
     recommendedPlanets: ['moon', 'mars', 'europa', 'titan', 'venus', 'kepler-442b'],
-    icon: 'Moon'
+    icon: 'Moon',
+    specifications: [
+      { label: '重力模拟', value: '0-1G 可调' },
+      { label: '睡眠模式', value: '8种预设+自定义' },
+      { label: '白噪音系统', value: '自然环境音+太空背景音' },
+      { label: '温度控制', value: '18-28°C 可调' },
+      { label: '空气质量', value: '负离子发生器+香薰系统' },
+      { label: '唤醒系统', value: '模拟日出+渐进式闹钟' }
+    ],
+    usageInstructions: '1. 固定在稳固的位置\n2. 设置所需的重力模拟强度\n3. 选择喜欢的睡眠模式和背景音\n4. 进入睡眠舱后使用安全带固定\n5. 设定唤醒时间和方式',
+    precautions: [
+      '重力模拟过高可能导致不适',
+      '首次使用建议从低重力开始',
+      '定期清洁睡眠舱内部',
+      '香薰精油需定期更换',
+      '禁止在睡眠舱内进食'
+    ],
+    manufacturer: 'Casper 太空睡眠实验室',
+    warranty: '10年结构保修，3年电子部件保修'
   }
 ];
