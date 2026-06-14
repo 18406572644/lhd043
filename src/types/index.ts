@@ -135,3 +135,77 @@ export interface TravelState {
   removeCheckIn: (id: string) => void;
   isAttractionCheckedIn: (attractionId: string) => boolean;
 }
+
+export interface Contact {
+  id: string;
+  name: string;
+  relationship: string;
+  avatar: string;
+  status: 'online' | 'offline' | 'busy';
+  lastSeen?: string;
+}
+
+export type MessagePriority = 'normal' | 'urgent';
+export type MessageStatus = 'sending' | 'transmitting' | 'delivered' | 'received' | 'failed';
+export type MessageType = 'text' | 'voice';
+
+export interface CommMessage {
+  id: string;
+  type: MessageType;
+  direction: 'sent' | 'received';
+  contactId: string;
+  content: string;
+  priority: MessagePriority;
+  status: MessageStatus;
+  timestamp: string;
+  delaySeconds: number;
+  signalStrength: number;
+  hasInterference: boolean;
+  voiceData?: {
+    duration: number;
+    noiseLevel: number;
+  };
+}
+
+export interface SignalStatus {
+  strength: number;
+  frequency: number;
+  bandwidth: number;
+  interferenceLevel: number;
+  solarStormActive: boolean;
+}
+
+export interface InterferenceEvent {
+  id: string;
+  type: 'solar_storm' | 'cosmic_rays' | 'atmospheric' | 'equipment';
+  severity: 'mild' | 'moderate' | 'severe';
+  startTime: string;
+  duration: number;
+  affectedFrequencies: [number, number];
+  description: string;
+}
+
+export interface CommState {
+  messages: CommMessage[];
+  contacts: Contact[];
+  selectedContact: Contact | null;
+  signalStatus: SignalStatus;
+  activeInterference: InterferenceEvent | null;
+  isTransmitting: boolean;
+  currentTransmission: {
+    messageId: string;
+    progress: number;
+    startTime: number;
+  } | null;
+  autoReplyTemplates: string[];
+  setSelectedContact: (contact: Contact | null) => void;
+  sendMessage: (content: string, type: MessageType, priority: MessagePriority) => void;
+  adjustFrequency: (frequency: number) => void;
+  acknowledgeInterference: () => void;
+  clearMessages: () => void;
+  simulateInterference: () => void;
+}
+
+export const LIGHT_SPEED = 299792.458;
+export const EARTH_COMMUNICATION_DELAY_BASE = 2.6;
+
