@@ -23,19 +23,25 @@ export const CommConsole = () => {
     }
   }, [activeInterference]);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !showStatic) return;
+    const container = containerRef.current;
+    if (!canvas || !showStatic || !container) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const rect = container.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
     };
     resize();
-    window.addEventListener('resize', resize);
+    
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(container);
 
     let animationId: number;
     const drawStatic = () => {
@@ -48,7 +54,7 @@ export const CommConsole = () => {
         data[i] = value * intensity;
         data[i + 1] = value * intensity;
         data[i + 2] = value * intensity;
-        data[i + 3] = 20 * intensity;
+        data[i + 3] = 15 * intensity;
       }
       
       ctx.putImageData(imageData, 0, 0);
@@ -58,7 +64,7 @@ export const CommConsole = () => {
 
     return () => {
       cancelAnimationFrame(animationId);
-      window.removeEventListener('resize', resize);
+      resizeObserver.disconnect();
     };
   }, [showStatic, signalStatus.interferenceLevel]);
 
@@ -82,46 +88,46 @@ export const CommConsole = () => {
   };
 
   return (
-    <div className="relative w-full min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-black">
+    <div ref={containerRef} className="relative w-full h-full min-h-0 flex flex-col bg-gradient-to-b from-gray-950/50 via-gray-900/50 to-black/50 overflow-hidden">
       {showStatic && (
         <canvas
           ref={canvasRef}
-          className="fixed inset-0 pointer-events-none z-10 opacity-50"
+          className="absolute inset-0 pointer-events-none z-10 opacity-30"
         />
       )}
 
       <AnimatePresence>
         {activeInterference && (
           <motion.div
-            initial={{ opacity: 0, y: -100 }}
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -100 }}
-            className={`fixed top-0 left-0 right-0 z-50 p-4 border-b-2 ${getInterferenceColor(activeInterference.severity)}`}
+            exit={{ opacity: 0, y: -20 }}
+            className={`sticky top-0 z-40 p-3 border-b-2 ${getInterferenceColor(activeInterference.severity)}`}
           >
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <motion.div
                   animate={{ scale: [1, 1.2, 1] }}
                   transition={{ duration: 1, repeat: Infinity }}
-                  className="text-2xl"
+                  className="text-xl"
                 >
                   {getInterferenceIcon(activeInterference.type)}
                 </motion.div>
                 <div>
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-yellow-400" />
-                    <span className="font-bold text-white">
+                    <span className="font-bold text-white text-sm">
                       {activeInterference.severity === 'severe' ? '严重' : activeInterference.severity === 'moderate' ? '中等' : '轻微'}
                       干扰警报
                     </span>
                   </div>
-                  <p className="text-sm text-gray-300 mt-0.5">
+                  <p className="text-xs text-gray-300 mt-0.5">
                     {activeInterference.description}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="text-right text-xs text-gray-400">
+                <div className="text-right text-xs text-gray-400 hidden sm:block">
                   <div>受影响频率</div>
                   <div className="font-mono text-gray-300">
                     {activeInterference.affectedFrequencies[0].toFixed(0)} - {activeInterference.affectedFrequencies[1].toFixed(0)} MHz
@@ -140,7 +146,7 @@ export const CommConsole = () => {
         )}
       </AnimatePresence>
 
-      <div className={`max-w-7xl mx-auto p-6 ${activeInterference ? 'pt-24' : ''}`}>
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
             <div className="relative">

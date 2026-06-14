@@ -78,7 +78,10 @@ export const MessageComposer = ({ onVoiceMode }: MessageComposerProps) => {
             <span>文字消息</span>
           </button>
           <button
-            onClick={onVoiceMode}
+            onClick={() => {
+              setMessageType('voice');
+              onVoiceMode();
+            }}
             className={`flex-1 flex items-center justify-center gap-1 px-3 py-1.5 rounded text-xs font-mono transition-all ${
               messageType === 'voice'
                 ? 'bg-cyan-600 text-white'

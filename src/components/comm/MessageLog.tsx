@@ -1,17 +1,21 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageSquare, Clock, Check, CheckCheck, Radio, 
-  AlertTriangle, Trash2, Volume2, VolumeX 
+  AlertTriangle, Trash2, Volume2, VolumeX, AlertCircle
 } from 'lucide-react';
 import { useCommStore } from '../../store/useCommStore';
 import { formatDelayTime } from '../../data/communications';
 import dayjs from 'dayjs';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 export const MessageLog = () => {
   const { messages, contacts, clearMessages, selectedContact, currentTransmission, signalStatus } = useCommStore();
   const [playingVoiceId, setPlayingVoiceId] = useState<string | null>(null);
+  const [playError, setPlayError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const playingVoiceIdRef = useRef<string | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   const filteredMessages = selectedContact
     ? messages.filter(m => m.contactId === selectedContact.id)
@@ -53,63 +57,135 @@ export const MessageLog = () => {
     }
   };
 
-  const playVoiceSimulation = (messageId: string, noiseLevel: number, duration: number) => {
-    if (playingVoiceId === messageId) {
-      setPlayingVoiceId(null);
+  const stopVoicePlayback = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = undefined;
+    }
+    if (audioContextRef.current) {
+      try {
+        audioContextRef.current.close();
+      } catch (e) {
+        console.warn('Failed to close audio context:', e);
+      }
+      audioContextRef.current = null;
+    }
+    playingVoiceIdRef.current = null;
+    setPlayingVoiceId(null);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      stopVoicePlayback();
+    };
+  }, [stopVoicePlayback]);
+
+  const playVoiceSimulation = useCallback((messageId: string, noiseLevel: number, duration: number) => {
+    if (playingVoiceIdRef.current === messageId) {
+      stopVoicePlayback();
       return;
     }
-    setPlayingVoiceId(messageId);
-    
-    const audioContext = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    const noiseNode = audioContext.createBufferSource();
-    
-    const bufferSize = audioContext.sampleRate * duration;
-    const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      output[i] = (Math.random() * 2 - 1) * noiseLevel * 0.5;
-    }
-    noiseNode.buffer = noiseBuffer;
-    
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(800 + Math.random() * 400, audioContext.currentTime);
-    oscillator.frequency.linearRampToValueAtTime(400 + Math.random() * 200, audioContext.currentTime + duration / 2);
-    oscillator.frequency.linearRampToValueAtTime(600 + Math.random() * 300, audioContext.currentTime + duration);
-    
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.1);
-    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + duration - 0.1);
-    
-    const noiseGain = audioContext.createGain();
-    noiseGain.gain.value = noiseLevel * 0.3;
-    
-    oscillator.connect(gainNode);
-    noiseNode.connect(noiseGain);
-    gainNode.connect(audioContext.destination);
-    noiseGain.connect(audioContext.destination);
-    
-    oscillator.start();
-    noiseNode.start();
-    
-    setTimeout(() => {
-      oscillator.stop();
-      noiseNode.stop();
-      audioContext.close();
-      if (playingVoiceId === messageId) {
-        setPlayingVoiceId(null);
+
+    stopVoicePlayback();
+    setPlayError(null);
+
+    try {
+      const AudioContextClass = AudioContext || 
+        (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      
+      if (!AudioContextClass) {
+        setPlayError('您的浏览器不支持音频播放');
+        return;
       }
-    }, duration * 1000);
-  };
+
+      const audioContext = new AudioContextClass();
+      audioContextRef.current = audioContext;
+      
+      if (audioContext.state === 'suspended') {
+        audioContext.resume().catch(err => {
+          console.warn('Failed to resume audio context:', err);
+        });
+      }
+
+      const actualDuration = Math.min(Math.max(duration, 1), 30);
+      
+      const osc1 = audioContext.createOscillator();
+      const osc2 = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      const noiseNode = audioContext.createBufferSource();
+      const noiseGain = audioContext.createGain();
+      const filter = audioContext.createBiquadFilter();
+      
+      const bufferSize = Math.floor(audioContext.sampleRate * actualDuration);
+      const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        const t = i / audioContext.sampleRate;
+        const envelope = t < 0.1 ? t / 0.1 : t > actualDuration - 0.1 ? (actualDuration - t) / 0.1 : 1;
+        output[i] = (Math.random() * 2 - 1) * noiseLevel * 0.4 * envelope;
+      }
+      noiseNode.buffer = noiseBuffer;
+      
+      filter.type = 'bandpass';
+      filter.frequency.value = 1500;
+      filter.Q.value = 0.7;
+      
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(650 + Math.random() * 200, audioContext.currentTime);
+      osc1.frequency.linearRampToValueAtTime(450 + Math.random() * 150, audioContext.currentTime + actualDuration * 0.4);
+      osc1.frequency.linearRampToValueAtTime(550 + Math.random() * 150, audioContext.currentTime + actualDuration * 0.7);
+      osc1.frequency.linearRampToValueAtTime(500 + Math.random() * 100, audioContext.currentTime + actualDuration);
+      
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(320 + Math.random() * 80, audioContext.currentTime);
+      
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.25, audioContext.currentTime + 0.15);
+      gainNode.gain.setValueAtTime(0.25, audioContext.currentTime + actualDuration - 0.2);
+      gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + actualDuration);
+      
+      noiseGain.gain.value = noiseLevel * 0.25 + 0.05;
+      
+      osc1.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      noiseNode.connect(noiseGain);
+      noiseGain.connect(audioContext.destination);
+      
+      osc1.start();
+      osc2.start();
+      noiseNode.start();
+
+      playingVoiceIdRef.current = messageId;
+      setPlayingVoiceId(messageId);
+      
+      timeoutRef.current = setTimeout(() => {
+        try {
+          osc1.stop();
+          osc2.stop();
+          noiseNode.stop();
+        } catch (e) {
+          console.warn('Failed to stop oscillators:', e);
+        }
+        stopVoicePlayback();
+      }, actualDuration * 1000 + 200);
+
+    } catch (err) {
+      console.error('Voice playback error:', err);
+      setPlayError('语音播放失败，请刷新页面重试');
+      stopVoicePlayback();
+    }
+  }, [stopVoicePlayback]);
 
   const sortedMessages = [...filteredMessages].sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   );
 
   return (
-    <div className="bg-gray-900/80 backdrop-blur-sm border border-blue-500/30 rounded-lg flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 border-b border-blue-500/20">
+    <div className="bg-gray-900/80 backdrop-blur-sm border border-blue-500/30 rounded-lg flex flex-col min-h-[350px] flex-1">
+      <div className="flex items-center justify-between p-4 border-b border-blue-500/20 flex-shrink-0">
         <div className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-blue-400" />
           <span className="text-blue-300 font-mono text-sm">通讯日志</span>
@@ -132,7 +208,7 @@ export const MessageLog = () => {
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="px-4 py-2 bg-cyan-900/30 border-b border-cyan-500/20"
+          className="px-4 py-2 bg-cyan-900/30 border-b border-cyan-500/20 flex-shrink-0"
         >
           <div className="flex items-center justify-between text-xs">
             <span className="text-cyan-300">信号传输进度</span>
@@ -149,7 +225,20 @@ export const MessageLog = () => {
         </motion.div>
       )}
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px]">
+      {playError && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-4 mt-3 p-2 bg-red-900/30 border border-red-500/50 rounded-lg flex-shrink-0"
+        >
+          <div className="flex items-center gap-2 text-xs text-red-300">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{playError}</span>
+          </div>
+        </motion.div>
+      )}
+
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
         <AnimatePresence>
           {sortedMessages.length === 0 ? (
             <motion.div
